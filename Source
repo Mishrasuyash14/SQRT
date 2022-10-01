@@ -1,1 +1,53 @@
+module float_div(out,ia,ib);
+output reg[31:0]out;
+//reg [31:0]res;
+input [31:0]ia,ib;
+integer n,i;
+reg [46:0] quo_man;
+reg [26:0]acc;
+reg [7:0]exp_a,exp_b,exp;
+parameter bias = 8'd127;
+reg [31:0]ix,iy;
+reg [23:0]ix_man,iy_man;
+always @(*)
+ begin
+  ix=ia;//dividend
+  iy=ib;//divisor
+  ix_man={1'b1,ix[22:0]};
+  iy_man={1'b1,iy[22:0]};
+  if(ix==0)
+   begin
+   out=0;
+   end
+   else if(iy==0)
+    begin
+    out=32'bz;
+    end 
+   else
+    begin
+    exp_a=ix[30:23];
+    exp_b=iy[30:23];
+    exp = (ix_man>=iy_man)?(exp_a - exp_b + bias):(exp_a - exp_b- 1'b1 + bias);
+    i=(ix_man>=iy_man)?46:47;
+    //now perform division on mantissa bits
+    acc=27'b0;quo_man=47'b0;
+    for(n=0;n<=i;n=n+1)
+       begin
+       {acc,ix_man}={acc,ix_man}<<1;
+       quo_man=quo_man<<1;
+         if(acc>=iy_man)
+          begin
+          acc=acc-iy_man;
+          quo_man[0]=1;
+          end
+          
+       end
+       out[31]=ia[31]^ib[31];
+       out[30:23]=exp[7:0];
+       out[22:0]=quo_man[22:0];
+     end
+     
+ end
+// assign out = {ix[31]^iy[31],exp,quo_man[22:0]};
+endmodule
 
